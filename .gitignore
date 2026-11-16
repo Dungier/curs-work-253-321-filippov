@@ -1,0 +1,8 @@
+/config/secrets.php
+/storage/*.sqlite*
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/.env
+/.env.*

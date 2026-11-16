@@ -1,0 +1,11 @@
+{
+  "name": "dompdf/dompdf",
+  "version": "3.1.6",
+  "release": "https://github.com/dompdf/dompdf/releases/tag/v3.1.6",
+  "asset": "https://github.com/dompdf/dompdf/releases/download/v3.1.6/dompdf-3.1.6.zip",
+  "githubApi": "https://api.github.com/repos/dompdf/dompdf/releases/latest",
+  "publishedSHA256": "05df8ee4907325ed2e09a139de9784325f761b43a049297155499270163ac94d",
+  "verifiedSHA256": "05df8ee4907325ed2e09a139de9784325f761b43a049297155499270163ac94d",
+  "zipBytes": 4129287,
+  "downloadedUtc": "2026-11-16T14:08:14.4736982Z"
+}

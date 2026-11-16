@@ -1,0 +1,1 @@
+<section class="empty-state error-page"><span class="empty-symbol" aria-hidden="true">✦</span><h1><?= e($title) ?></h1><p><?= e($message) ?></p><a class="button" href="<?= e(url()) ?>">На главную</a></section>
