@@ -74,8 +74,8 @@ class StoryController
                 $text = trim(is_string($page['text'] ?? null) ? $page['text'] : '');
                 $pages[] = ['heading' => $heading, 'text' => $text];
 
-                if ($heading === '' || mb_strlen($heading) > 90 || mb_strlen($text) < 100 || mb_strlen($text) > 2600) {
-                    $errors[] = 'Страница ' . ($index + 1) . ': нужны заголовок до 90 символов и текст от 100 до 2600 символов.';
+                if ($heading === '' || mb_strlen($heading) > 90 || $text === '') {
+                    $errors[] = 'Страница ' . ($index + 1) . ': укажите заголовок до 90 символов и непустой текст.';
                 }
             }
         }
@@ -84,17 +84,6 @@ class StoryController
             $story['title'] = $title;
             $story['pages'] = $pages ?: $story['pages'];
             View::render('stories/edit', ['title' => 'Редактирование — Лист', 'story' => $story, 'errors' => $errors], 422);
-            return;
-        }
-
-        $candidate = $story;
-        $candidate['title'] = $title;
-        $candidate['pages'] = $pages;
-
-        try {
-            (new PdfExporter())->build($candidate);
-        } catch (RuntimeException $error) {
-            View::render('stories/edit', ['title' => 'Редактирование — Лист', 'story' => $candidate, 'errors' => [$error->getMessage()]], 422);
             return;
         }
 

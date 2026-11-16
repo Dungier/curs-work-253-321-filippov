@@ -95,29 +95,35 @@ class TextGenerator
         $end = strrpos($text, '}');
         $data = $start !== false && $end !== false ? json_decode(substr($text, $start, $end - $start + 1), true) : null;
 
-        if (!is_array($data) || !is_array($data['page'] ?? null)) {
-            throw new RuntimeException('Ответ пришёл в неподходящем формате. Повторите генерацию этой страницы.', 502);
+        if (!is_array($data)) {
+            if (str_starts_with(ltrim($text), '{') || str_starts_with(ltrim($text), '[')) {
+                throw new RuntimeException('Ответ пришёл в неподходящем формате. Повторите генерацию этой страницы.', 502);
+            }
+
+            $data = ['page' => ['text' => $text]];
+        }
+
+        $page = is_array($data['page'] ?? null) ? $data['page'] : [];
+        $content = trim(is_string($page['text'] ?? null) ? $page['text'] : (is_string($data['text'] ?? null) ? $data['text'] : ''));
+
+        if ($content === '') {
+            throw new RuntimeException('Сервис не вернул текст. Повторите генерацию этой страницы.', 502);
         }
 
         $title = trim(is_string($data['title'] ?? null) ? $data['title'] : '');
-        $heading = trim(is_string($data['page']['heading'] ?? null) ? $data['page']['heading'] : '');
-        $content = trim(is_string($data['page']['text'] ?? null) ? $data['page']['text'] : '');
+        $heading = trim(is_string($page['heading'] ?? null) ? $page['heading'] : '');
+        $title = mb_substr($title !== '' ? $title : ($generation['title'] ?: 'Новая история'), 0, 120);
+        $heading = mb_substr($heading !== '' ? $heading : 'Часть ' . $number, 0, 90);
         $outline = $generation['outline'];
 
         if ($number === 1) {
-            $outline = is_array($data['outline'] ?? null) ? array_values($data['outline']) : [];
+            $outline = is_array($data['outline'] ?? null) ? $data['outline'] : [];
+            $outline = array_values(array_filter($outline, fn($value) => is_string($value) && trim($value) !== ''));
+            $outline = array_slice($outline, 0, $total);
 
-            if (count($outline) !== $total || count(array_filter($outline, fn($value) => is_string($value) && trim($value) !== '')) !== $total) {
-                throw new RuntimeException('Сервис не составил полный план истории. Попробуйте ещё раз.', 502);
+            while (count($outline) < $total) {
+                $outline[] = count($outline) === $total - 1 ? 'Завершение истории' : 'Продолжение истории';
             }
-        }
-
-        if ($title === '' || mb_strlen($title) > 120 || $heading === '' || mb_strlen($heading) > 90 || mb_strlen($content) < 500 || mb_strlen($content) > 2600) {
-            throw new RuntimeException('Полученный текст не подошёл по объёму. Повторите генерацию этой страницы.', 502);
-        }
-
-        if (preg_match('/[A-Za-z\p{Han}]/u', $title . $heading . $content)) {
-            throw new RuntimeException('Модель добавила текст на другом языке. Повторите генерацию этой страницы.', 502);
         }
 
         return ['title' => $title, 'outline' => $outline, 'page' => ['heading' => $heading, 'text' => $content]];

@@ -5,7 +5,6 @@ use App\Core\Auth;
 use App\Core\View;
 use App\Models\Generation;
 use App\Services\TextGenerator;
-use App\Services\PdfExporter;
 use RuntimeException;
 
 class GenerationController
@@ -91,7 +90,6 @@ class GenerationController
             $callId = Generation::startCall($user['id'], (int) $id);
             session_write_close();
             $result = (new TextGenerator())->page($generation);
-            (new PdfExporter())->build(['title' => $generation['title'] ?: $result['title'], 'author' => $user['name'], 'genre' => $generation['genre'], 'page_count' => 1, 'pages' => [$result['page']]]);
             $storyId = Generation::savePage($generation, $result);
             Generation::endCall($callId, 'success');
             json_response(['done' => $storyId !== null, 'url' => $storyId ? url('/stories/' . $storyId) : null, 'current' => count($generation['pages']) + 1, 'total' => (int) $generation['page_count']]);

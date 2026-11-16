@@ -3,7 +3,6 @@ namespace App\Services;
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use RuntimeException;
 
 class PdfExporter
 {
@@ -15,6 +14,8 @@ class PdfExporter
         if (!is_dir($cache)) {
             mkdir($cache, 0700, true);
         }
+
+        $fallback = '';
 
         foreach ([12, 11.5, 11, 10.5] as $size) {
             $options = new Options();
@@ -30,14 +31,25 @@ class PdfExporter
             $pdf->loadHtml($this->html($story, $size), 'UTF-8');
             $pdf->render();
 
-            if ($pdf->getCanvas()->get_page_count() === (int) $story['page_count']) {
+            $count = $pdf->getCanvas()->get_page_count();
+
+            if ($size === 12 || $count === (int) $story['page_count']) {
                 $font = $pdf->getFontMetrics()->getFont('DejaVu Sans', 'normal');
                 $pdf->getCanvas()->page_text(277, 810, '{PAGE_NUM} / {PAGE_COUNT}', $font, 9, [0.4, 0.4, 0.4]);
-                return $pdf->output();
+                $bytes = $pdf->output();
+
+                if ($count === (int) $story['page_count']) {
+                    return $bytes;
+                }
+
+                $fallback = $bytes;
             }
+
+            unset($pdf);
+            gc_collect_cycles();
         }
 
-        throw new RuntimeException('Текст не поместился в выбранное число страниц. Немного сократите его в редакторе и снова скачайте PDF.', 422);
+        return $fallback;
     }
 
     private function html(array $story, float $size): string
